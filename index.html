@@ -151,7 +151,7 @@ const VERSION_CONSENTIMIENTO = "2026-10-v1";
 // Avisos automáticos a GEHCH al recibir un reclamo ("" = desactivado)
 const AVISO_NTFY = "gehch-reclamos-97grsmymu97cmr";          // canal privado de la app ntfy en el celular de Guillermo
 const AVISO_EMAILJS = {"service_id":"service_la1vpwy","template_id":"template_pj679wq","public_key":"iyY3HcObkulFCVbs_"};      // {service_id, template_id, public_key} o null
-const CRM_URL = "https://gherrerach14-dev.github.io/gehch-crm/CRM-GEHCH_83.html";
+const CRM_URL = "https://gherrerach14-dev.github.io/gehch-crm/ultimo.html";
 
 const PROCEDIMIENTOS = ["Consultas","Medicamentos","Laboratorios","Diagnóstico por Imágenes y Estudios","Emergencia","Hospitalización","Vacunas","Chequeo Médico de Rutina"];
 // Qué documento adicional se le pide amablemente según el servicio (null = solo el recibo)
@@ -395,7 +395,33 @@ function pantallaInicio(){
         el("div",null, el("div",{style:"font-weight:800"},"Mi familia asegurada"), el("div",{class:"muted"}, `${S.asegurados.length} registrado${S.asegurados.length===1?"":"s"}`)),
         el("span",{class:"link"},"Ver ›"))
     ),
+    (S.cli.vehiculos||[]).length ? el("div",{class:"card"},
+      el("div",{class:"li", style:"cursor:pointer", onclick:()=>pantallaVehiculos()},
+        el("div",null, el("div",{style:"font-weight:800"},"Mis vehículos asegurados"), el("div",{class:"muted"}, `${S.cli.vehiculos.length} vehículo${S.cli.vehiculos.length===1?"":"s"} · coberturas de su póliza`)),
+        el("span",{class:"link"},"Ver ›"))
+    ) : null,
     el("p",{class:"foot"},"Consejo: agregue esta página a su pantalla de inicio para encontrarla rápido.")
+  );
+}
+
+// ═══ PANTALLA: VEHÍCULOS (solo lectura, datos enviados por GEHCH) ═══════════
+function pantallaVehiculos(){
+  const lista = S.cli.vehiculos || [];
+  const CLAVE = [[/movilidad/i,"Vehículo rentado"],[/asistencia vial/i,"Asistencia vial"],[/automovilista|CAA/i,"CAA"],[/cristal/i,"Cristales"]];
+  pintar(
+    el("button",{class:"link", onclick:()=>pantallaInicio()},"‹ Volver"),
+    el("h1",null,"Mis vehículos asegurados"),
+    el("p",{class:"sub"},"Resumen de las coberturas de su póliza. Ante cualquier duda, escríbanos."),
+    lista.map(v=>el("div",{class:"card"},
+      el("h2",null, v.vehiculo || "Vehículo"),
+      el("p",{class:"muted"}, [v.placa?`Placa ${v.placa}`:"", v.poliza?`Póliza ${v.poliza}`:"", v.aseguradora||""].filter(Boolean).join(" · ")),
+      el("div",{style:"display:flex;gap:6px;flex-wrap:wrap;margin:10px 0"}, CLAVE.map(([re,l])=>{ const t=(v.coberturas||[]).some(c=>re.test(c.cobertura)); return el("span",{class:"chip", style:`background:${t?"#16a34a":"#dc2626"}1f;color:${t?"#16a34a":"#dc2626"}`}, `${t?"✓":"✗"} ${l}`); })),
+      (v.coberturas||[]).length===0 ? el("p",{class:"muted"},"Las coberturas de este vehículo aún no están cargadas.") :
+      (v.coberturas||[]).map(c=>el("div",{class:"li"},
+        el("div",null, el("div",{style:"font-weight:700"}, c.cobertura), c.deducible?el("div",{class:"muted"},`Deducible: ${c.deducible}`):null),
+        el("div",{style:"font-weight:800;text-align:right"}, c.limite)))
+    )),
+    el("p",{class:"foot"},"Información de referencia. Las condiciones de la póliza emitida por la aseguradora son las que aplican.")
   );
 }
 

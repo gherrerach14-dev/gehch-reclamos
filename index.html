@@ -168,7 +168,8 @@ const BANCOS = ["Banco de Reservas","Banco Popular Dominicano","Banco BHD","Scot
 // Plazos para reclamar (días desde la fecha del servicio). Aseguradora sin plazo = solo aviso general.
 const PLAZOS = { "Seguros Reservas": { Local: 90, Extranjero: 180 } };
 const etiquetaEstado = (r) => r.estado==="Documentos adicionales" ? (r.origenDocs==="aseguradora" ? "Solicitado por aseguradora" : "Incompleto") : r.estado;
-const COLOR_ESTADO = { "Incompleto":"#d97706", "Solicitado por aseguradora":"#db2777", "Recibido":"#2563eb", "Enviado a aseguradora":"#7c3aed", "Documentos adicionales":"#d97706", "Pagado":"#16a34a", "Rechazado":"#dc2626" };
+const PAGO_48H = ["Seguros Reservas"];   // aseguradoras que pagan 24-48 h después de aprobar
+const COLOR_ESTADO = { "Incompleto":"#d97706", "Solicitado por aseguradora":"#db2777", "Recibido":"#2563eb", "Enviado a aseguradora":"#7c3aed", "Documentos adicionales":"#d97706", "Aprobado":"#0d9488", "Pagado":"#16a34a", "Rechazado":"#dc2626" };
 const MAX_CHARS = 880000;      // tamaño máximo de cada pedazo guardado (base64)
 const MAX_PDF = 4 * 1024 * 1024;
 
@@ -782,7 +783,9 @@ function pantallaDetalle(r){
     el("button",{class:"link", onclick:()=>pantallaInicio()},"‹ Volver"),
     el("h1",null,`Reclamo ${r.id}`),
     el("div",{style:"margin-bottom:14px"}, chipEstado(etiquetaEstado(r))),
-    r.notaAdmin ? el("div",{class:"aviso "+(r.estado==="Rechazado"?"bad":r.estado==="Pagado"?"ok":"warn"), style:"margin-bottom:14px"}, el("b",null, r.estado==="Documentos adicionales" ? (r.origenDocs==="aseguradora" ? `${r.poliza?.aseguradora||"Su aseguradora"} solicita: ` : "Falta lo siguiente: ") : "Mensaje de GEHCH: "), r.notaAdmin.split(/\n/).filter(Boolean).join(" · ")) : null,
+    r.estado==="Aprobado" ? el("div",{class:"aviso ok", style:"margin-bottom:14px"}, el("b",null,"✅ Reclamo aprobado"+(r.poliza?.aseguradora?` por ${r.poliza.aseguradora}`:"")+". "),
+      PAGO_48H.includes(r.poliza?.aseguradora||"") ? (r.pago?.forma==="Cheque" ? "El cheque estará disponible en un plazo de 24 a 48 horas." : "El pago se verá reflejado en su cuenta en un plazo de 24 a 48 horas.") : "Le avisaremos en cuanto el pago esté disponible.") : null,
+    r.notaAdmin ? el("div",{class:"aviso "+(r.estado==="Rechazado"?"bad":(r.estado==="Pagado"||r.estado==="Aprobado")?"ok":"warn"), style:"margin-bottom:14px"}, el("b",null, r.estado==="Documentos adicionales" ? (r.origenDocs==="aseguradora" ? `${r.poliza?.aseguradora||"Su aseguradora"} solicita: ` : "Falta lo siguiente: ") : "Mensaje de GEHCH: "), r.notaAdmin.split(/\n/).filter(Boolean).join(" · ")) : null,
     puedeAdjuntar ? el("div",{class:"card"}, el("h2",null,"Enviar documentos solicitados"), zona, msg, btn) : null,
     r.estado==="Documentos adicionales" && r.adicionalesEnviados ? el("div",{class:"aviso ok", style:"margin-bottom:14px"},"Documentos enviados. GEHCH los revisará.") : null,
     el("div",{class:"card"},
